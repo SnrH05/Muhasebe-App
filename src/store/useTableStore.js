@@ -39,6 +39,11 @@ export const useTableStore = create((set, get) => ({
   tables: INITIAL_TABLES,
   sections: SECTIONS,
   selectedSectionId: 's1',
+  tableWidth: 210, // Varsayılan genişlik
+  tableHeight: 105, // Varsayılan yükseklik
+
+  // Masa boyutlarını güncelle
+  setTableDimensions: (width, height) => set({ tableWidth: width, tableHeight: height }),
 
   // Bölüm seçimi
   setSelectedSection: (sectionId) => set({ selectedSectionId: sectionId }),
@@ -110,22 +115,45 @@ export const useTableStore = create((set, get) => ({
     ),
   })),
 
-  // Masa ekleme (Sadece Admin)
-  addTable: (sectionId, tableName) => set((state) => ({
-    tables: [
-      ...state.tables,
-      {
-        id: `t_${Date.now()}`,
-        sectionId,
-        name: tableName,
-        status: TABLE_STATUS.EMPTY,
-        orders: [],
-        totalAmount: 0,
-        paidAmount: 0,
-        position: { x: 50, y: 50 },
-      },
-    ],
-  })),
+  // Masa ekleme (Akıllı Yerleşim)
+  addTable: (sectionId, tableName) => set((state) => {
+    const sectionTables = state.tables.filter(t => t.sectionId === sectionId);
+    let newPos = { x: 50, y: 50 };
+
+    if (sectionTables.length > 0) {
+      // Mevcut masaların en sonuncusunu veya en sağ/alt noktasındakini bul
+      const lastTable = sectionTables[sectionTables.length - 1];
+      const spacing = 30; // Masalar arası boşluk
+      
+      // Önce yana eklemeyi dene
+      let nextX = lastTable.position.x + state.tableWidth + spacing;
+      let nextY = lastTable.position.y;
+
+      // Eğer ekranın çok sağına geldiyse (1024 referansına göre) alt satıra geç
+      if (nextX + state.tableWidth > 950) {
+        nextX = 50;
+        nextY = lastTable.position.y + state.tableHeight + spacing;
+      }
+
+      newPos = { x: nextX, y: nextY };
+    }
+
+    return {
+      tables: [
+        ...state.tables,
+        {
+          id: `t_${Date.now()}`,
+          sectionId,
+          name: tableName,
+          status: TABLE_STATUS.EMPTY,
+          orders: [],
+          totalAmount: 0,
+          paidAmount: 0,
+          position: newPos,
+        },
+      ],
+    };
+  }),
 
   // Masa konumunu güncelle
   moveTable: (tableId, x, y) => set((state) => ({

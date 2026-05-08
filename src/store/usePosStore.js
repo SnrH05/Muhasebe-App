@@ -58,6 +58,11 @@ export const usePosStore = create((set, get) => ({
     { id: 'd2', name: 'Müdür İndirimi', type: 'percent', value: 100 },
     { id: 'd3', name: 'Adisyon İkramı', type: 'amount', value: 50 },
   ],
+  posIp: '192.168.1.50',
+  posPort: '8888',
+
+  // POS Cihazı IP/Port güncelleme
+  setPosSettings: (ip, port) => set({ posIp: ip, posPort: port }),
 
   // Kategori seçme
   setSelectedCategory: (id) => set({ selectedCategoryId: id }),

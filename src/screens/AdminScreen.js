@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, Modal } from 'react-native';
 import { COLORS, FONT_SIZES, BORDER_RADIUS } from '../theme';
+import { wp, hp, fp } from '../responsive';
 import { usePosStore } from '../store/usePosStore';
 import { useInventoryStore } from '../store/useInventoryStore';
 import { useAuditStore } from '../store/useAuditStore';
@@ -25,10 +26,10 @@ const PrinterInput = ({ label, value, onChangeText, placeholder, keyboardType })
 
 const AdminScreen = () => {
   const { 
-    categories, menuItems, printers, discountPresets,
+    categories, menuItems, printers, discountPresets, posIp, posPort,
     bulkPriceUpdate, addPrinter, updatePrinter, removePrinter, 
     addCategory, updateCategory, removeCategory, addMenuItem, updateMenuItem, 
-    addDiscountPreset, removeDiscountPreset
+    addDiscountPreset, removeDiscountPreset, setPosSettings
   } = usePosStore();
   const { ingredients, addStock, setRecipe, recipes, addIngredient } = useInventoryStore();
   const { logs, transactions, takeZReport, zReports } = useAuditStore();
@@ -58,6 +59,10 @@ const AdminScreen = () => {
   const [editForm, setEditForm] = useState({ name: '', ip: '', port: '' });
   const [isAddingPrinter, setIsAddingPrinter] = useState(false);
   const [newPrinterForm, setNewPrinterForm] = useState({ name: '', ip: '', port: '9100' });
+
+  // POS Ayarları state'leri
+  const [editingPosConfig, setEditingPosConfig] = useState(false);
+  const [posConfigForm, setPosConfigForm] = useState({ ip: posIp, port: posPort });
 
   // Yeni ürün ekleme state'leri
   const [isAddingProduct, setIsAddingProduct] = useState(false);
@@ -781,6 +786,49 @@ const AdminScreen = () => {
                 )}
               </View>
             ))}
+
+            {/* POS CİHAZI AYARLARI */}
+            <View style={{ marginTop: 30, borderTopWidth: 1, borderTopColor: COLORS.border, paddingTop: 20 }}>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionTitle}>💳 POS Cihazı (Ingenico) Bağlantısı</Text>
+                <TouchableOpacity style={styles.addPrinterBtn} onPress={() => { setEditingPosConfig(!editingPosConfig); setPosConfigForm({ ip: posIp, port: posPort }); }}>
+                  <Text style={styles.addPrinterBtnText}>{editingPosConfig ? '✕ İptal' : '⚙️ Ayarla'}</Text>
+                </TouchableOpacity>
+              </View>
+
+              {editingPosConfig ? (
+                <View style={[styles.addPrinterCard, { backgroundColor: COLORS.warning + '10', borderColor: COLORS.warning + '30' }]}>
+                  <Text style={[styles.addPrinterTitle, { color: COLORS.warning }]}>⚙️ POS Ayarlarını Düzenle</Text>
+                  <PrinterInput label="POS IP Adresi" value={posConfigForm.ip} onChangeText={(v) => setPosConfigForm(f => ({...f, ip: v}))} placeholder="192.168.1.50" />
+                  <PrinterInput label="POS Port" value={posConfigForm.port} onChangeText={(v) => setPosConfigForm(f => ({...f, port: v}))} placeholder="8888" keyboardType="numeric" />
+                  <TouchableOpacity 
+                    style={[styles.saveBtn, { backgroundColor: COLORS.warning }]} 
+                    onPress={() => {
+                      setPosSettings(posConfigForm.ip, posConfigForm.port);
+                      addLog('POS_SETTINGS_UPDATED', `POS Bağlantısı güncellendi: ${posConfigForm.ip}:${posConfigForm.port}`, currentUser?.id, currentUser?.name);
+                      setEditingPosConfig(false);
+                      Alert.alert('Başarılı', 'POS bağlantı ayarları kaydedildi.');
+                    }}
+                  >
+                    <Text style={[styles.saveBtnText, { color: '#fff' }]}>✓ POS Ayarlarını Kaydet</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.printerCard}>
+                  <View style={styles.printerCardHeader}>
+                    <Text style={styles.printerName}>Ingenico iDE280 / iPP350</Text>
+                    <View style={[styles.badge, { backgroundColor: COLORS.success }]}>
+                      <Text style={styles.badgeText}>Aktif</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.printerDetail}>Hedef IP: {posIp}</Text>
+                  <Text style={styles.printerDetail}>Hedef Port: {posPort}</Text>
+                  <Text style={[styles.printerDetail, { fontSize: 11, marginTop: 8, color: COLORS.textMuted }]}>
+                    Ödemeler tamamlandığında otomatik olarak bilgi fişi (slip) komutu gönderilir.
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
         )}
 
@@ -1102,72 +1150,70 @@ const AdminScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   tabBar: { backgroundColor: COLORS.surface, borderBottomWidth: 1, borderBottomColor: COLORS.border, width: '100%', flexGrow: 0 },
-  tabBarContent: { paddingHorizontal: 24, paddingVertical: 12, gap: 10, flexDirection: 'row', alignItems: 'center' },
-  tab: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: BORDER_RADIUS.lg, backgroundColor: COLORS.surfaceLight, borderWidth: 1.5, borderColor: COLORS.border },
+  tabBarContent: { paddingHorizontal: wp(24), paddingVertical: hp(12), gap: wp(10), flexDirection: 'row', alignItems: 'center' },
+  tab: { paddingHorizontal: wp(20), paddingVertical: hp(10), borderRadius: BORDER_RADIUS.lg, backgroundColor: COLORS.surfaceLight, borderWidth: 1.5, borderColor: COLORS.border },
   tabActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primaryLight },
   tabText: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, fontWeight: '700' },
   tabTextActive: { color: '#fff' },
-  content: { flex: 1, padding: 24 },
-  sectionTitle: { fontSize: FONT_SIZES.xxl, fontWeight: '800', color: COLORS.textPrimary, marginBottom: 6 },
-  sectionSub: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, marginBottom: 20 },
-  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  searchInput: { backgroundColor: COLORS.surfaceLight, borderRadius: BORDER_RADIUS.md, paddingHorizontal: 16, paddingVertical: 10, color: COLORS.textPrimary, flex: 1, marginLeft: 16, borderWidth: 1, borderColor: COLORS.border },
-  catChip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: BORDER_RADIUS.lg, backgroundColor: COLORS.surfaceLight, borderWidth: 1, borderColor: COLORS.border },
+  content: { flex: 1, padding: wp(24) },
+  sectionTitle: { fontSize: FONT_SIZES.xxl, fontWeight: '800', color: COLORS.textPrimary, marginBottom: hp(6) },
+  sectionSub: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, marginBottom: hp(20) },
+  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: hp(16) },
+  searchInput: { backgroundColor: COLORS.surfaceLight, borderRadius: BORDER_RADIUS.md, paddingHorizontal: wp(16), paddingVertical: hp(10), color: COLORS.textPrimary, flex: 1, marginLeft: wp(16), borderWidth: 1, borderColor: COLORS.border },
+  catChip: { paddingHorizontal: wp(16), paddingVertical: hp(10), borderRadius: BORDER_RADIUS.lg, backgroundColor: COLORS.surfaceLight, borderWidth: 1, borderColor: COLORS.border },
   catChipText: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, fontWeight: '600' },
-  bulkRow: { marginBottom: 20 },
-  bulkInputRow: { flexDirection: 'row', gap: 12 },
-  input: { flex: 1, backgroundColor: COLORS.surfaceLight, borderRadius: BORDER_RADIUS.md, paddingHorizontal: 16, paddingVertical: 12, color: COLORS.textPrimary, fontSize: FONT_SIZES.md, borderWidth: 1, borderColor: COLORS.border },
-  applyBtn: { backgroundColor: COLORS.primary, paddingHorizontal: 24, borderRadius: BORDER_RADIUS.md, justifyContent: 'center' },
+  bulkRow: { marginBottom: hp(20) },
+  bulkInputRow: { flexDirection: 'row', gap: wp(12) },
+  input: { flex: 1, backgroundColor: COLORS.surfaceLight, borderRadius: BORDER_RADIUS.md, paddingHorizontal: wp(16), paddingVertical: hp(12), color: COLORS.textPrimary, fontSize: FONT_SIZES.md, borderWidth: 1, borderColor: COLORS.border },
+  applyBtn: { backgroundColor: COLORS.primary, paddingHorizontal: wp(24), borderRadius: BORDER_RADIUS.md, justifyContent: 'center' },
   applyBtnText: { color: '#fff', fontWeight: '700', fontSize: FONT_SIZES.md },
-  catHeader: { fontSize: FONT_SIZES.lg, fontWeight: '700', marginBottom: 8 },
-  menuRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface, padding: 14, borderRadius: BORDER_RADIUS.md, marginBottom: 6, borderWidth: 1, borderColor: COLORS.border },
+  catHeader: { fontSize: FONT_SIZES.lg, fontWeight: '700', marginBottom: hp(8) },
+  menuRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface, padding: wp(14), borderRadius: BORDER_RADIUS.md, marginBottom: hp(6), borderWidth: 1, borderColor: COLORS.border },
   menuName: { flex: 1, fontSize: FONT_SIZES.md, color: COLORS.textPrimary, fontWeight: '600' },
-  menuPrice: { fontSize: FONT_SIZES.md, color: COLORS.success, fontWeight: '700', width: 80, textAlign: 'right' },
-  menuPrinter: { fontSize: FONT_SIZES.sm, color: COLORS.textMuted, width: 130, textAlign: 'right' },
-  stockRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface, padding: 16, borderRadius: BORDER_RADIUS.md, marginBottom: 8, borderWidth: 1, borderColor: COLORS.border },
+  menuPrice: { fontSize: FONT_SIZES.md, color: COLORS.success, fontWeight: '700', width: wp(80), textAlign: 'right' },
+  menuPrinter: { fontSize: FONT_SIZES.sm, color: COLORS.textMuted, width: wp(130), textAlign: 'right' },
+  stockRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface, padding: wp(16), borderRadius: BORDER_RADIUS.md, marginBottom: hp(8), borderWidth: 1, borderColor: COLORS.border },
   stockName: { fontSize: FONT_SIZES.md, color: COLORS.textPrimary, fontWeight: '700' },
-  stockDetail: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary, marginTop: 4 },
-  stockBar: { height: 8, borderRadius: 4, backgroundColor: COLORS.surfaceLight, overflow: 'hidden' },
+  stockDetail: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary, marginTop: hp(4) },
+  stockBar: { height: hp(8), borderRadius: 4, backgroundColor: COLORS.surfaceLight, overflow: 'hidden' },
   stockBarFill: { height: '100%', borderRadius: 4 },
-  addStockRow: { flexDirection: 'row', gap: 12, marginTop: 16 },
-
-  // Yazıcı stilleri
-  printerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
-  addPrinterBtn: { backgroundColor: COLORS.success, paddingHorizontal: 18, paddingVertical: 10, borderRadius: BORDER_RADIUS.md },
+  addStockRow: { flexDirection: 'row', gap: wp(12), marginTop: hp(16) },
+  printerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: hp(10) },
+  addPrinterBtn: { backgroundColor: COLORS.success, paddingHorizontal: wp(18), paddingVertical: hp(10), borderRadius: BORDER_RADIUS.md },
   addPrinterBtnText: { color: '#fff', fontWeight: '700', fontSize: FONT_SIZES.md },
-  addPrinterCard: { backgroundColor: COLORS.success + '15', padding: 20, borderRadius: BORDER_RADIUS.lg, marginBottom: 16, borderWidth: 1, borderColor: COLORS.success + '40' },
-  addPrinterTitle: { fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.success, marginBottom: 14 },
-  printerCard: { backgroundColor: COLORS.surface, padding: 20, borderRadius: BORDER_RADIUS.lg, marginBottom: 12, borderWidth: 1, borderColor: COLORS.border },
+  addPrinterCard: { backgroundColor: COLORS.success + '15', padding: wp(20), borderRadius: BORDER_RADIUS.lg, marginBottom: hp(16), borderWidth: 1, borderColor: COLORS.success + '40' },
+  addPrinterTitle: { fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.success, marginBottom: hp(14) },
+  printerCard: { backgroundColor: COLORS.surface, padding: wp(20), borderRadius: BORDER_RADIUS.lg, marginBottom: hp(12), borderWidth: 1, borderColor: COLORS.border },
   printerCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   printerName: { fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.textPrimary },
-  printerDetail: { fontSize: FONT_SIZES.md, color: COLORS.secondary, marginTop: 6, fontFamily: 'monospace' },
-  printerCategories: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary, marginTop: 8 },
-  printerActions: { flexDirection: 'row', gap: 8 },
-  editBtn: { backgroundColor: COLORS.primary + '20', padding: 10, borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: COLORS.primary + '40' },
-  editBtnText: { fontSize: 18 },
-  deleteBtn: { backgroundColor: COLORS.danger + '20', padding: 10, borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: COLORS.danger + '40' },
-  deleteBtnText: { fontSize: 18 },
-  editTitle: { fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.primary, marginBottom: 14 },
-  printerInputGroup: { marginBottom: 12 },
-  printerInputLabel: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary, marginBottom: 4, fontWeight: '600' },
-  printerInput: { backgroundColor: COLORS.surfaceLight, borderRadius: BORDER_RADIUS.md, paddingHorizontal: 14, paddingVertical: 10, color: COLORS.textPrimary, fontSize: FONT_SIZES.md, borderWidth: 1, borderColor: COLORS.border },
-  editActions: { flexDirection: 'row', gap: 12, marginTop: 4 },
-  saveBtn: { backgroundColor: COLORS.success, paddingHorizontal: 20, paddingVertical: 12, borderRadius: BORDER_RADIUS.md, alignItems: 'center', flex: 1 },
+  printerDetail: { fontSize: FONT_SIZES.md, color: COLORS.secondary, marginTop: hp(6), fontFamily: 'monospace' },
+  printerCategories: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary, marginTop: hp(8) },
+  printerActions: { flexDirection: 'row', gap: wp(8) },
+  editBtn: { backgroundColor: COLORS.primary + '20', padding: wp(10), borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: COLORS.primary + '40' },
+  editBtnText: { fontSize: fp(18) },
+  deleteBtn: { backgroundColor: COLORS.danger + '20', padding: wp(10), borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: COLORS.danger + '40' },
+  deleteBtnText: { fontSize: fp(18) },
+  editTitle: { fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.primary, marginBottom: hp(14) },
+  printerInputGroup: { marginBottom: hp(12) },
+  printerInputLabel: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary, marginBottom: hp(4), fontWeight: '600' },
+  printerInput: { backgroundColor: COLORS.surfaceLight, borderRadius: BORDER_RADIUS.md, paddingHorizontal: wp(14), paddingVertical: hp(10), color: COLORS.textPrimary, fontSize: FONT_SIZES.md, borderWidth: 1, borderColor: COLORS.border },
+  editActions: { flexDirection: 'row', gap: wp(12), marginTop: hp(4) },
+  saveBtn: { backgroundColor: COLORS.success, paddingHorizontal: wp(20), paddingVertical: hp(12), borderRadius: BORDER_RADIUS.md, alignItems: 'center', flex: 1 },
   saveBtnText: { color: '#fff', fontWeight: '700', fontSize: FONT_SIZES.md },
-  cancelBtn: { backgroundColor: COLORS.surfaceLight, paddingHorizontal: 20, paddingVertical: 12, borderRadius: BORDER_RADIUS.md, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
+  cancelBtn: { backgroundColor: COLORS.surfaceLight, paddingHorizontal: wp(20), paddingVertical: hp(12), borderRadius: BORDER_RADIUS.md, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
   cancelBtnText: { color: COLORS.textSecondary, fontWeight: '600', fontSize: FONT_SIZES.md },
-  
-  // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.xl, padding: 30, width: 360, borderWidth: 1, borderColor: COLORS.border },
-  modalTitle: { fontSize: FONT_SIZES.xl, fontWeight: '700', color: COLORS.textPrimary, marginBottom: 12 },
-  modalSubtitle: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, marginBottom: 24, lineHeight: 22 },
-  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },
-  modalCancelBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: BORDER_RADIUS.md, backgroundColor: COLORS.surfaceLight },
+  modalContent: { backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.xl, padding: wp(30), width: wp(360), borderWidth: 1, borderColor: COLORS.border },
+  modalTitle: { fontSize: FONT_SIZES.xl, fontWeight: '700', color: COLORS.textPrimary, marginBottom: hp(12) },
+  modalSubtitle: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, marginBottom: hp(24), lineHeight: fp(22) },
+  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: wp(12) },
+  modalCancelBtn: { paddingHorizontal: wp(20), paddingVertical: hp(10), borderRadius: BORDER_RADIUS.md, backgroundColor: COLORS.surfaceLight },
   modalCancelText: { color: COLORS.textSecondary, fontWeight: '600' },
-  modalConfirmBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: BORDER_RADIUS.md, backgroundColor: COLORS.primary },
+  modalConfirmBtn: { paddingHorizontal: wp(20), paddingVertical: hp(10), borderRadius: BORDER_RADIUS.md, backgroundColor: COLORS.primary },
   modalConfirmText: { color: '#fff', fontWeight: '700' },
-  legendDot: { width: 12, height: 12, borderRadius: 6, marginRight: 6 },
+  legendDot: { width: wp(12), height: wp(12), borderRadius: wp(6), marginRight: wp(6) },
+  miniCard: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: COLORS.surface, padding: wp(12), borderRadius: BORDER_RADIUS.md, marginBottom: hp(8) },
+  miniCardText: { color: COLORS.textPrimary, fontWeight: '600' },
 });
 
 export default AdminScreen;

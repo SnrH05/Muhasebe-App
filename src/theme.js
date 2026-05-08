@@ -1,5 +1,6 @@
 // Muhasebe POS - Global Theme / Design System
 // Tüm renk, boyut ve tipografi tanımları bu dosyadan yönetilir.
+import { wp, hp, fp } from './responsive';
 
 export const COLORS = {
   // Ana Arka Planlar
@@ -41,46 +42,46 @@ export const COLORS = {
 };
 
 export const SPACING = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  xxl: 28,
-  xxxl: 36,
+  xs: wp(4),
+  sm: wp(8),
+  md: wp(12),
+  lg: wp(16),
+  xl: wp(20),
+  xxl: wp(28),
+  xxxl: wp(36),
 };
 
 export const FONT_SIZES = {
-  xs: 11,
-  sm: 13,
-  md: 15,
-  lg: 18,
-  xl: 22,
-  xxl: 28,
-  xxxl: 36,
+  xs: fp(11),
+  sm: fp(13),
+  md: fp(15),
+  lg: fp(18),
+  xl: fp(22),
+  xxl: fp(28),
+  xxxl: fp(36),
 };
 
 export const BORDER_RADIUS = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
+  sm: wp(8),
+  md: wp(12),
+  lg: wp(16),
+  xl: wp(20),
   full: 999,
 };
 
 export const SHADOWS = {
   card: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: wp(4) },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowRadius: wp(8),
     elevation: 6,
   },
   elevated: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: { width: 0, height: wp(8) },
     shadowOpacity: 0.4,
-    shadowRadius: 16,
+    shadowRadius: wp(16),
     elevation: 10,
   },
 };

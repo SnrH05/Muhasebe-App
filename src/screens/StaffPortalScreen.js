@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, Image } from 'react-native';
 import { COLORS, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../theme';
+import { wp, hp, fp } from '../responsive';
 import { useStaffStore } from '../store/useStaffStore';
 import { useAuthStore } from '../store/useAuthStore';
 
@@ -157,33 +158,33 @@ const StaffPortalScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background, padding: 20 },
-  header: { marginBottom: 24 },
+  container: { flex: 1, backgroundColor: COLORS.background, padding: wp(20) },
+  header: { marginBottom: hp(24) },
   headerTitle: { fontSize: FONT_SIZES.xxl, fontWeight: '800', color: COLORS.textPrimary },
   headerSubtitle: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary },
-  section: { marginBottom: 30 },
-  sectionTitle: { fontSize: FONT_SIZES.xl, fontWeight: '700', color: COLORS.textPrimary, marginBottom: 12 },
-  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  actionBtn: { padding: 20, borderRadius: BORDER_RADIUS.lg, alignItems: 'center', ...SHADOWS.md },
-  actionBtnText: { color: '#fff', fontSize: 18, fontWeight: '800' },
-  card: { backgroundColor: COLORS.surface, padding: 16, borderRadius: BORDER_RADIUS.lg, marginBottom: 12, ...SHADOWS.sm, borderLeftWidth: 4, borderLeftColor: COLORS.primary },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  cardTitle: { fontSize: 16, fontWeight: '700', color: COLORS.textPrimary },
-  cardDesc: { color: COLORS.textSecondary, marginBottom: 12 },
-  badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
-  badgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
-  completeBtn: { backgroundColor: COLORS.primary + '20', padding: 10, borderRadius: BORDER_RADIUS.md, alignItems: 'center' },
+  section: { marginBottom: hp(30) },
+  sectionTitle: { fontSize: FONT_SIZES.xl, fontWeight: '700', color: COLORS.textPrimary, marginBottom: hp(12) },
+  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: hp(12) },
+  actionBtn: { padding: wp(20), borderRadius: BORDER_RADIUS.lg, alignItems: 'center' },
+  actionBtnText: { color: '#fff', fontSize: fp(18), fontWeight: '800' },
+  card: { backgroundColor: COLORS.surface, padding: wp(16), borderRadius: BORDER_RADIUS.lg, marginBottom: hp(12), borderLeftWidth: 4, borderLeftColor: COLORS.primary },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: hp(8) },
+  cardTitle: { fontSize: fp(16), fontWeight: '700', color: COLORS.textPrimary },
+  cardDesc: { color: COLORS.textSecondary, marginBottom: hp(12) },
+  badge: { paddingHorizontal: wp(8), paddingVertical: hp(4), borderRadius: 4 },
+  badgeText: { color: '#fff', fontSize: fp(10), fontWeight: 'bold' },
+  completeBtn: { backgroundColor: COLORS.primary + '20', padding: wp(10), borderRadius: BORDER_RADIUS.md, alignItems: 'center' },
   completeBtnText: { color: COLORS.primary, fontWeight: '700' },
-  taskImage: { width: '100%', height: 150, borderRadius: BORDER_RADIUS.md, marginTop: 12 },
-  miniCard: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: COLORS.surface, padding: 12, borderRadius: BORDER_RADIUS.md, marginBottom: 8 },
+  taskImage: { width: '100%', height: hp(150), borderRadius: BORDER_RADIUS.md, marginTop: hp(12) },
+  miniCard: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: COLORS.surface, padding: wp(12), borderRadius: BORDER_RADIUS.md, marginBottom: hp(8) },
   miniCardText: { color: COLORS.textPrimary, fontWeight: '600' },
-  requestForm: { backgroundColor: COLORS.surfaceLight, padding: 16, borderRadius: BORDER_RADIUS.lg, marginBottom: 16 },
-  typeToggle: { flexDirection: 'row', gap: 10, marginBottom: 12 },
-  typeBtn: { flex: 1, padding: 10, borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: COLORS.border, alignItems: 'center' },
+  requestForm: { backgroundColor: COLORS.surfaceLight, padding: wp(16), borderRadius: BORDER_RADIUS.lg, marginBottom: hp(16) },
+  typeToggle: { flexDirection: 'row', gap: wp(10), marginBottom: hp(12) },
+  typeBtn: { flex: 1, padding: wp(10), borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: COLORS.border, alignItems: 'center' },
   typeBtnActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
   typeBtnText: { fontWeight: '700', color: COLORS.textSecondary },
-  input: { backgroundColor: '#fff', borderRadius: BORDER_RADIUS.md, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: COLORS.border },
-  submitBtn: { backgroundColor: COLORS.primary, padding: 15, borderRadius: BORDER_RADIUS.md, alignItems: 'center' },
+  input: { backgroundColor: '#fff', borderRadius: BORDER_RADIUS.md, padding: wp(12), marginBottom: hp(12), borderWidth: 1, borderColor: COLORS.border },
+  submitBtn: { backgroundColor: COLORS.primary, padding: wp(15), borderRadius: BORDER_RADIUS.md, alignItems: 'center' },
   submitBtnText: { color: '#fff', fontWeight: '800' },
   emptyText: { color: COLORS.textMuted, fontStyle: 'italic' }
 });

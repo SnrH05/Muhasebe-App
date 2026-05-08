@@ -2,11 +2,13 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ActivityIndicator, ScrollView, TextInput } from 'react-native';
 import { COLORS, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../theme';
+import { wp, hp, fp } from '../responsive';
 import { useTableStore } from '../store/useTableStore';
 import { useAuditStore } from '../store/useAuditStore';
 import { useInventoryStore } from '../store/useInventoryStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { usePosStore } from '../store/usePosStore';
+import { printSlipViaBridge } from '../services/posService';
 
 const PaymentScreen = ({ route, navigation }) => {
   const tableId = route?.params?.tableId;
@@ -23,7 +25,7 @@ const PaymentScreen = ({ route, navigation }) => {
   const { addTransaction, addLog } = useAuditStore();
   const { deductStock } = useInventoryStore();
   const { currentUser } = useAuthStore();
-  const { discountPresets } = usePosStore();
+  const { discountPresets, posIp, posPort } = usePosStore();
 
   const [cashAmount, setCashAmount] = useState(0);
   const [cardAmount, setCardAmount] = useState(0);
@@ -75,7 +77,7 @@ const PaymentScreen = ({ route, navigation }) => {
     }, 2000);
   };
 
-  const handleCompletePayment = () => {
+  const handleCompletePayment = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
 
@@ -83,6 +85,26 @@ const PaymentScreen = ({ route, navigation }) => {
     const totalDeduction = paidNow + calculatedDiscount;
     const method = cardAmount > 0 && cashAmount > 0 ? 'hybrid' : paymentMethod;
     
+    // Ingenico POS Slip Yazdırma İsteği
+    const orderDataForPos = {
+      tableName,
+      waiter: currentUser?.name,
+      totalAmount: paidNow,
+      items: orderItems.flatMap(o => o.items)
+    };
+
+    // Fiş yazdırılıyor bilgisi için mevcut modalı kullanıyoruz
+    setShowPosWaiting(true); 
+    const slipResult = await printSlipViaBridge(orderDataForPos, method, posIp, posPort);
+    setShowPosWaiting(false);
+
+    if (!slipResult.success) {
+      // Gerçek senaryoda burada işlemi durdurmak veya kullanıcıya sormak gerekebilir.
+      // Şimdilik sadece uyarı verip işleme devam ediyoruz.
+      console.warn(`Fiş yazdırılamadı: ${slipResult.message}`);
+      // alert(`Fiş yazdırılamadı: ${slipResult.message}`); // Native ortamlarda eklenebilir
+    }
+
     addTransaction(tableId, tableName, orderItems, paidNow, method, currentUser?.id, currentUser?.name, calculatedDiscount);
     addLog('PAYMENT_RECEIVED', `${tableName} - ${paidNow.toFixed(2)} ₺ (${method})${calculatedDiscount > 0 ? ' [İndirim: ' + calculatedDiscount.toFixed(2) + ' ₺]' : ''}`, currentUser?.id, currentUser?.name);
 
@@ -434,81 +456,59 @@ const PaymentScreen = ({ route, navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, flexDirection: 'row', backgroundColor: COLORS.background },
-  summaryPanel: { width: '40%', backgroundColor: COLORS.surface, padding: 24, borderRightWidth: 1, borderRightColor: COLORS.border },
-  backBtn: { marginBottom: 16 },
+  summaryPanel: { width: '40%', backgroundColor: COLORS.surface, padding: wp(24), borderRightWidth: 1, borderRightColor: COLORS.border },
+  backBtn: { marginBottom: hp(16) },
   backBtnText: { color: COLORS.primary, fontSize: FONT_SIZES.md, fontWeight: '600' },
-  panelTitle: { fontSize: FONT_SIZES.xxl, fontWeight: '800', color: COLORS.textPrimary, marginBottom: 24 },
-  totalBox: {
-    backgroundColor: COLORS.surfaceLight, borderRadius: BORDER_RADIUS.lg, padding: 20,
-    alignItems: 'center', marginBottom: 16, borderWidth: 1, borderColor: COLORS.border,
-  },
+  panelTitle: { fontSize: FONT_SIZES.xxl, fontWeight: '800', color: COLORS.textPrimary, marginBottom: hp(24) },
+  totalBox: { backgroundColor: COLORS.surfaceLight, borderRadius: BORDER_RADIUS.lg, padding: wp(20), alignItems: 'center', marginBottom: hp(16), borderWidth: 1, borderColor: COLORS.border },
   totalLabel: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary, fontWeight: '600', letterSpacing: 2 },
-  totalValue: { fontSize: 48, fontWeight: '800', color: COLORS.textPrimary, marginTop: 8 },
-  breakdownSection: { marginTop: 20 },
-  breakdownItem: { fontSize: FONT_SIZES.lg, color: COLORS.textSecondary, marginBottom: 8 },
-  paymentPanel: { flex: 1, padding: 24 },
-  methodTabs: { flexDirection: 'row', gap: 12, marginBottom: 24 },
-  methodTab: {
-    flex: 1, padding: 16, borderRadius: BORDER_RADIUS.lg, alignItems: 'center',
-    backgroundColor: COLORS.surfaceLight, borderWidth: 1, borderColor: COLORS.border,
-  },
+  totalValue: { fontSize: fp(48), fontWeight: '800', color: COLORS.textPrimary, marginTop: hp(8) },
+  breakdownSection: { marginTop: hp(20) },
+  breakdownItem: { fontSize: FONT_SIZES.lg, color: COLORS.textSecondary, marginBottom: hp(8) },
+  paymentPanel: { flex: 1, padding: wp(24) },
+  methodTabs: { flexDirection: 'row', gap: wp(12), marginBottom: hp(24) },
+  methodTab: { flex: 1, padding: wp(16), borderRadius: BORDER_RADIUS.lg, alignItems: 'center', backgroundColor: COLORS.surfaceLight, borderWidth: 1, borderColor: COLORS.border },
   methodTabText: { fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.textSecondary },
-  quickAmounts: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
-  quickBtn: {
-    width: '30%', padding: 18, borderRadius: BORDER_RADIUS.lg, alignItems: 'center',
-    backgroundColor: COLORS.surfaceLight, borderWidth: 1, borderColor: COLORS.border,
-  },
+  quickAmounts: { flexDirection: 'row', flexWrap: 'wrap', gap: wp(12), marginBottom: hp(24) },
+  quickBtn: { width: '30%', padding: wp(18), borderRadius: BORDER_RADIUS.lg, alignItems: 'center', backgroundColor: COLORS.surfaceLight, borderWidth: 1, borderColor: COLORS.border },
   quickBtnText: { fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.textPrimary },
-  cardPayBtn: {
-    backgroundColor: COLORS.primary, padding: 20, borderRadius: BORDER_RADIUS.lg,
-    alignItems: 'center', marginBottom: 24, borderWidth: 2, borderColor: COLORS.primaryLight,
-  },
+  cardPayBtn: { backgroundColor: COLORS.primary, padding: wp(20), borderRadius: BORDER_RADIUS.lg, alignItems: 'center', marginBottom: hp(24), borderWidth: 2, borderColor: COLORS.primaryLight },
   cardPayBtnText: { fontSize: FONT_SIZES.xl, fontWeight: '800', color: '#fff' },
-  actionRow: { flexDirection: 'row', gap: 12, marginTop: 'auto' },
-  resetBtn: {
-    flex: 1, padding: 18, borderRadius: BORDER_RADIUS.lg, alignItems: 'center',
-    backgroundColor: COLORS.surfaceLight, borderWidth: 1, borderColor: COLORS.border,
-  },
+  actionRow: { flexDirection: 'row', gap: wp(12), marginTop: 'auto' },
+  resetBtn: { flex: 1, padding: wp(18), borderRadius: BORDER_RADIUS.lg, alignItems: 'center', backgroundColor: COLORS.surfaceLight, borderWidth: 1, borderColor: COLORS.border },
   resetBtnText: { fontSize: FONT_SIZES.lg, fontWeight: '600', color: COLORS.textSecondary },
-  completeBtn: {
-    flex: 2, padding: 18, borderRadius: BORDER_RADIUS.lg, alignItems: 'center',
-    backgroundColor: COLORS.success, borderWidth: 2, borderColor: COLORS.successLight,
-  },
+  completeBtn: { flex: 2, padding: wp(18), borderRadius: BORDER_RADIUS.lg, alignItems: 'center', backgroundColor: COLORS.success, borderWidth: 2, borderColor: COLORS.successLight },
   completeBtnText: { fontSize: FONT_SIZES.lg, fontWeight: '900', color: '#fff' },
-  successText: { fontSize: 36, fontWeight: '800', color: COLORS.success },
-  successSub: { fontSize: FONT_SIZES.lg, color: COLORS.textSecondary, marginTop: 8 },
+  successText: { fontSize: fp(36), fontWeight: '800', color: COLORS.success },
+  successSub: { fontSize: FONT_SIZES.lg, color: COLORS.textSecondary, marginTop: hp(8) },
   posOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center' },
-  posModal: { backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.xl, padding: 40, alignItems: 'center', borderWidth: 1, borderColor: COLORS.primary, width: 380 },
-  posTitle: { fontSize: FONT_SIZES.xl, fontWeight: '700', color: COLORS.textPrimary, marginTop: 20, textAlign: 'center' },
-  posSubtitle: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, marginTop: 8 },
-
-  // Müşteri Ekranı Stilleri
-  customerOverlay: { flex: 1, backgroundColor: COLORS.background, padding: 40, justifyContent: 'center', alignItems: 'center' },
-  customerContent: { backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.xl, padding: 40, width: '100%', maxWidth: 600, height: '90%', borderWidth: 1, borderColor: COLORS.border, ...SHADOWS.elevated },
-  customerTitle: { fontSize: FONT_SIZES.xxl, fontWeight: '800', color: COLORS.primary, textAlign: 'center', marginBottom: 10, letterSpacing: 4 },
-  customerTable: { fontSize: FONT_SIZES.xl, fontWeight: '700', color: COLORS.textPrimary, textAlign: 'center', marginBottom: 30 },
-  customerItems: { flex: 1, marginBottom: 20 },
-  customerItemRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+  posModal: { backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.xl, padding: wp(40), alignItems: 'center', borderWidth: 1, borderColor: COLORS.primary, width: wp(380) },
+  posTitle: { fontSize: FONT_SIZES.xl, fontWeight: '700', color: COLORS.textPrimary, marginTop: hp(20), textAlign: 'center' },
+  posSubtitle: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, marginTop: hp(8) },
+  customerOverlay: { flex: 1, backgroundColor: COLORS.background, padding: wp(40), justifyContent: 'center', alignItems: 'center' },
+  customerContent: { backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.xl, padding: wp(40), width: '100%', maxWidth: wp(600), height: '90%', borderWidth: 1, borderColor: COLORS.border, ...SHADOWS.elevated },
+  customerTitle: { fontSize: FONT_SIZES.xxl, fontWeight: '800', color: COLORS.primary, textAlign: 'center', marginBottom: hp(10), letterSpacing: 4 },
+  customerTable: { fontSize: FONT_SIZES.xl, fontWeight: '700', color: COLORS.textPrimary, textAlign: 'center', marginBottom: hp(30) },
+  customerItems: { flex: 1, marginBottom: hp(20) },
+  customerItemRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: hp(12), borderBottomWidth: 1, borderBottomColor: COLORS.border },
   customerItemName: { fontSize: FONT_SIZES.lg, color: COLORS.textPrimary, fontWeight: '600' },
   customerItemPrice: { fontSize: FONT_SIZES.lg, color: COLORS.textSecondary, fontWeight: '700' },
-  customerTotalBox: { backgroundColor: COLORS.surfaceLight, padding: 30, borderRadius: BORDER_RADIUS.lg, alignItems: 'center', marginBottom: 20 },
+  customerTotalBox: { backgroundColor: COLORS.surfaceLight, padding: wp(30), borderRadius: BORDER_RADIUS.lg, alignItems: 'center', marginBottom: hp(20) },
   customerTotalLabel: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, fontWeight: '700', letterSpacing: 2 },
-  customerTotalValue: { fontSize: 64, fontWeight: '800', color: COLORS.textPrimary, marginTop: 10 },
-  customerCloseBtn: { backgroundColor: COLORS.surfaceLight, padding: 20, borderRadius: BORDER_RADIUS.lg, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
+  customerTotalValue: { fontSize: fp(64), fontWeight: '800', color: COLORS.textPrimary, marginTop: hp(10) },
+  customerCloseBtn: { backgroundColor: COLORS.surfaceLight, padding: wp(20), borderRadius: BORDER_RADIUS.lg, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
   customerCloseText: { fontSize: FONT_SIZES.lg, color: COLORS.textSecondary, fontWeight: '700' },
-
-  // Hesap Bölme Stilleri
-  modalTitle: { fontSize: FONT_SIZES.xl, fontWeight: '800', color: COLORS.textPrimary, marginBottom: 20 },
-  input: { backgroundColor: COLORS.surfaceLight, borderRadius: BORDER_RADIUS.md, padding: 15, color: COLORS.textPrimary, fontSize: FONT_SIZES.lg, borderWidth: 1, borderColor: COLORS.border },
-  splitItemRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 16, borderRadius: BORDER_RADIUS.md, marginBottom: 8, borderWidth: 1, borderColor: COLORS.border, backgroundColor: COLORS.surfaceLight },
+  modalTitle: { fontSize: FONT_SIZES.xl, fontWeight: '800', color: COLORS.textPrimary, marginBottom: hp(20) },
+  input: { backgroundColor: COLORS.surfaceLight, borderRadius: BORDER_RADIUS.md, padding: wp(15), color: COLORS.textPrimary, fontSize: FONT_SIZES.lg, borderWidth: 1, borderColor: COLORS.border },
+  splitItemRow: { flexDirection: 'row', justifyContent: 'space-between', padding: wp(16), borderRadius: BORDER_RADIUS.md, marginBottom: hp(8), borderWidth: 1, borderColor: COLORS.border, backgroundColor: COLORS.surfaceLight },
   splitItemText: { fontSize: FONT_SIZES.md, color: COLORS.textPrimary, fontWeight: '600' },
   splitItemPrice: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, fontWeight: '700' },
-  modalActions: { flexDirection: 'row', gap: 12, marginTop: 20, width: '100%' },
-  modalCancelBtn: { flex: 1, padding: 15, borderRadius: BORDER_RADIUS.md, backgroundColor: COLORS.surfaceLight, alignItems: 'center' },
+  modalActions: { flexDirection: 'row', gap: wp(12), marginTop: hp(20), width: '100%' },
+  modalCancelBtn: { flex: 1, padding: wp(15), borderRadius: BORDER_RADIUS.md, backgroundColor: COLORS.surfaceLight, alignItems: 'center' },
   modalCancelText: { color: COLORS.textSecondary, fontWeight: '700' },
-  modalConfirmBtn: { flex: 2, padding: 15, borderRadius: BORDER_RADIUS.md, backgroundColor: COLORS.primary, alignItems: 'center' },
+  modalConfirmBtn: { flex: 2, padding: wp(15), borderRadius: BORDER_RADIUS.md, backgroundColor: COLORS.primary, alignItems: 'center' },
   modalConfirmText: { color: '#fff', fontWeight: '800' },
-  catChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: COLORS.border, backgroundColor: COLORS.surfaceLight },
+  catChip: { paddingHorizontal: wp(12), paddingVertical: hp(6), borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: COLORS.border, backgroundColor: COLORS.surfaceLight },
   catChipText: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary, fontWeight: '600' },
 });
 

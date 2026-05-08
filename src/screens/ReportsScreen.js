@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { COLORS, FONT_SIZES, BORDER_RADIUS } from '../theme';
+import { wp, hp, fp } from '../responsive';
 import { useAuditStore } from '../store/useAuditStore';
 import { useInventoryStore } from '../store/useInventoryStore';
 import { useAuthStore } from '../store/useAuthStore';
@@ -133,30 +134,30 @@ const ReportsScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  tabBar: { flexDirection: 'row', backgroundColor: COLORS.surface, paddingHorizontal: 24, paddingVertical: 12, gap: 10, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-  tab: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: BORDER_RADIUS.lg, backgroundColor: COLORS.surfaceLight },
+  tabBar: { flexDirection: 'row', backgroundColor: COLORS.surface, paddingHorizontal: wp(24), paddingVertical: hp(12), gap: wp(10), borderBottomWidth: 1, borderBottomColor: COLORS.border },
+  tab: { paddingHorizontal: wp(20), paddingVertical: hp(10), borderRadius: BORDER_RADIUS.lg, backgroundColor: COLORS.surfaceLight },
   tabActive: { backgroundColor: COLORS.primary },
   tabText: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, fontWeight: '600' },
   tabTextActive: { color: '#fff' },
-  content: { flex: 1, padding: 24 },
-  sectionTitle: { fontSize: FONT_SIZES.xxl, fontWeight: '800', color: COLORS.textPrimary, marginBottom: 8 },
-  dateText: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, marginBottom: 24 },
-  statsRow: { flexDirection: 'row', gap: 16, marginBottom: 24 },
-  statCard: { flex: 1, backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.lg, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
+  content: { flex: 1, padding: wp(24) },
+  sectionTitle: { fontSize: FONT_SIZES.xxl, fontWeight: '800', color: COLORS.textPrimary, marginBottom: hp(8) },
+  dateText: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, marginBottom: hp(24) },
+  statsRow: { flexDirection: 'row', gap: wp(16), marginBottom: hp(24) },
+  statCard: { flex: 1, backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.lg, padding: wp(20), alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
   statValue: { fontSize: FONT_SIZES.xxl, fontWeight: '800', color: COLORS.textPrimary },
-  statLabel: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary, marginTop: 6 },
-  zReportBtn: { backgroundColor: COLORS.danger, padding: 18, borderRadius: BORDER_RADIUS.lg, alignItems: 'center', marginTop: 16 },
+  statLabel: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary, marginTop: hp(6) },
+  zReportBtn: { backgroundColor: COLORS.danger, padding: wp(18), borderRadius: BORDER_RADIUS.lg, alignItems: 'center', marginTop: hp(16) },
   zReportBtnText: { fontSize: FONT_SIZES.lg, fontWeight: '700', color: '#fff' },
-  emptyText: { color: COLORS.textMuted, fontSize: FONT_SIZES.md, textAlign: 'center', marginTop: 40 },
-  logItem: { flexDirection: 'row', backgroundColor: COLORS.surface, padding: 16, borderRadius: BORDER_RADIUS.md, marginBottom: 8, borderWidth: 1, borderColor: COLORS.border },
+  emptyText: { color: COLORS.textMuted, fontSize: FONT_SIZES.md, textAlign: 'center', marginTop: hp(40) },
+  logItem: { flexDirection: 'row', backgroundColor: COLORS.surface, padding: wp(16), borderRadius: BORDER_RADIUS.md, marginBottom: hp(8), borderWidth: 1, borderColor: COLORS.border },
   logAction: { fontSize: FONT_SIZES.sm, fontWeight: '700', color: COLORS.primary },
-  logDetails: { fontSize: FONT_SIZES.md, color: COLORS.textPrimary, marginTop: 4 },
+  logDetails: { fontSize: FONT_SIZES.md, color: COLORS.textPrimary, marginTop: hp(4) },
   logUser: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary },
-  logTime: { fontSize: FONT_SIZES.xs, color: COLORS.textMuted, marginTop: 2 },
-  alertItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.danger + '15', padding: 16, borderRadius: BORDER_RADIUS.md, marginBottom: 8, gap: 12, borderWidth: 1, borderColor: COLORS.danger + '40' },
-  alertIcon: { fontSize: 24 },
+  logTime: { fontSize: FONT_SIZES.xs, color: COLORS.textMuted, marginTop: hp(2) },
+  alertItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.danger + '15', padding: wp(16), borderRadius: BORDER_RADIUS.md, marginBottom: hp(8), gap: wp(12), borderWidth: 1, borderColor: COLORS.danger + '40' },
+  alertIcon: { fontSize: fp(24) },
   alertName: { fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.danger },
-  alertDetail: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary, marginTop: 4 },
+  alertDetail: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary, marginTop: hp(4) },
 });
 
 export default ReportsScreen;
