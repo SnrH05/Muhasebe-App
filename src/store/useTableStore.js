@@ -18,21 +18,21 @@ const SECTIONS = [
 // Başlangıç masaları
 const INITIAL_TABLES = [
   // Salon
-  { id: 't1', sectionId: 's1', name: 'Masa 1', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0 },
-  { id: 't2', sectionId: 's1', name: 'Masa 2', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0 },
-  { id: 't3', sectionId: 's1', name: 'Masa 3', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0 },
-  { id: 't4', sectionId: 's1', name: 'Masa 4', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0 },
-  { id: 't5', sectionId: 's1', name: 'Masa 5', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0 },
-  { id: 't6', sectionId: 's1', name: 'Masa 6', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0 },
+  { id: 't1', sectionId: 's1', name: 'Masa 1', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0, position: { x: 50, y: 50 } },
+  { id: 't2', sectionId: 's1', name: 'Masa 2', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0, position: { x: 220, y: 50 } },
+  { id: 't3', sectionId: 's1', name: 'Masa 3', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0, position: { x: 390, y: 50 } },
+  { id: 't4', sectionId: 's1', name: 'Masa 4', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0, position: { x: 50, y: 210 } },
+  { id: 't5', sectionId: 's1', name: 'Masa 5', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0, position: { x: 220, y: 210 } },
+  { id: 't6', sectionId: 's1', name: 'Masa 6', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0, position: { x: 390, y: 210 } },
   // Bahçe
-  { id: 't7', sectionId: 's2', name: 'B-1', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0 },
-  { id: 't8', sectionId: 's2', name: 'B-2', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0 },
-  { id: 't9', sectionId: 's2', name: 'B-3', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0 },
-  { id: 't10', sectionId: 's2', name: 'B-4', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0 },
+  { id: 't7', sectionId: 's2', name: 'B-1', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0, position: { x: 50, y: 50 } },
+  { id: 't8', sectionId: 's2', name: 'B-2', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0, position: { x: 220, y: 50 } },
+  { id: 't9', sectionId: 's2', name: 'B-3', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0, position: { x: 390, y: 50 } },
+  { id: 't10', sectionId: 's2', name: 'B-4', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0, position: { x: 50, y: 210 } },
   // Teras
-  { id: 't11', sectionId: 's3', name: 'T-1', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0 },
-  { id: 't12', sectionId: 's3', name: 'T-2', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0 },
-  { id: 't13', sectionId: 's3', name: 'T-3', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0 },
+  { id: 't11', sectionId: 's3', name: 'T-1', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0, position: { x: 50, y: 50 } },
+  { id: 't12', sectionId: 's3', name: 'T-2', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0, position: { x: 220, y: 50 } },
+  { id: 't13', sectionId: 's3', name: 'T-3', status: TABLE_STATUS.EMPTY, orders: [], totalAmount: 0, paidAmount: 0, position: { x: 390, y: 50 } },
 ];
 
 export const useTableStore = create((set, get) => ({
@@ -122,8 +122,16 @@ export const useTableStore = create((set, get) => ({
         orders: [],
         totalAmount: 0,
         paidAmount: 0,
+        position: { x: 50, y: 50 },
       },
     ],
+  })),
+
+  // Masa konumunu güncelle
+  moveTable: (tableId, x, y) => set((state) => ({
+    tables: state.tables.map(t =>
+      t.id === tableId ? { ...t, position: { x, y } } : t
+    ),
   })),
 
   // Masa silme (Sadece Admin)
@@ -137,6 +145,9 @@ export const useTableStore = create((set, get) => ({
       t.id === tableId ? { ...t, name: newName } : t
     ),
   })),
+
+  // Masaları yeniden sırala
+  reorderTables: (newTables) => set({ tables: newTables }),
 
   // Bölümdeki masaları getir
   getTablesBySection: (sectionId) => {

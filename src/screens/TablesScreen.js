@@ -1,6 +1,6 @@
 // Masa Haritası Ekranı - Garson Terminali & Yönetici Masa CRUD
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal, Alert, PanResponder } from 'react-native';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../theme';
 import { useTableStore, TABLE_STATUS } from '../store/useTableStore';
 import { useAuthStore } from '../store/useAuthStore';
@@ -18,17 +18,75 @@ const STATUS_LABELS = {
 };
 
 const TablesScreen = ({ navigation }) => {
-  const { tables, sections, selectedSectionId, setSelectedSection, addTable, removeTable } = useTableStore();
+  const { tables, sections, selectedSectionId, setSelectedSection, addTable, removeTable, moveTable } = useTableStore();
   const { currentUser, isAdmin, logout } = useAuthStore();
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTableName, setNewTableName] = useState('');
+  
+  // Yönetim Modalı State'leri
+  const [showManageModal, setShowManageModal] = useState(false);
+  const [selectedTable, setSelectedTable] = useState(null);
+  
+  // Düzenleme Modu State'leri
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [movingTableId, setMovingTableId] = useState(null);
 
   const sectionTables = tables.filter(t => t.sectionId === selectedSectionId);
   const admin = isAdmin();
 
+  // Her masa için ayrı bir PanResponder oluşturmak yerine, 
+  // aktif sürüklenen masayı takip eden bir yapı kuruyoruz.
+  const createPanResponder = (tableId) => PanResponder.create({
+    onStartShouldSetPanResponder: () => isEditMode,
+    onMoveShouldSetPanResponder: () => isEditMode,
+    onPanResponderGrant: () => {
+      setMovingTableId(tableId);
+    },
+    onPanResponderMove: (evt, gestureState) => {
+      if (!isEditMode) return;
+      // Anlık görsel geri bildirim için store'u güncelliyoruz (Throttle edilebilir ama demo için doğrudan yapıyoruz)
+      const table = tables.find(t => t.id === tableId);
+      if (table) {
+        const newX = Math.max(0, table.position.x + gestureState.dx / 10); // Hassasiyeti ayarladık
+        const newY = Math.max(0, table.position.y + gestureState.dy / 10);
+        // Not: gestureState.dx kümülatif olduğu için her harekette direkt eklemek titremeye yol açabilir.
+        // Daha sağlıklı olanı başlangıç pozisyonunu grant'te kaydedip move'da onun üzerine eklemektir.
+      }
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      if (!isEditMode) return;
+      const table = tables.find(t => t.id === tableId);
+      if (table) {
+        moveTable(tableId, table.position.x + gestureState.dx, table.position.y + gestureState.dy);
+      }
+      setMovingTableId(null);
+    },
+  });
+
+  // Daha basit ve performanslı bir yaklaşım: Sürükleme bittiğinde koordinatları güncelle
+  const handleDragEnd = (tableId, gestureState) => {
+    const table = tables.find(t => t.id === tableId);
+    if (table) {
+      moveTable(tableId, table.position.x + gestureState.dx, table.position.y + gestureState.dy);
+    }
+  };
+
   const handleTablePress = (table) => {
+    if (isEditMode) return; // Düzenleme modunda tıklama kapalı (sadece sürükleme)
+
     if (navigation?.navigate) {
       navigation.navigate('TableOrder', { tableId: table.id, tableName: table.name });
+    }
+  };
+
+  const handleLongPress = (table) => {
+    if (!admin) return;
+    
+    if (!isEditMode) {
+      setSelectedTable(table);
+      setShowManageModal(true);
+    } else {
+      setMovingTableId(table.id);
     }
   };
 
@@ -56,20 +114,29 @@ const TablesScreen = ({ navigation }) => {
       {/* Üst Bar */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Masa Haritası</Text>
+          <Text style={styles.headerTitle}>Masa Haritası {isEditMode && <Text style={{ color: COLORS.primary }}>(Düzenleme Modu)</Text>}</Text>
           <Text style={styles.headerSubtitle}>
             {currentUser?.name} • {admin ? 'Yönetici' : 'Garson'}
           </Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 20 }}>
-          <View style={styles.legend}>
-            {Object.entries(STATUS_LABELS).map(([status, label]) => (
-              <View key={status} style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: STATUS_COLORS[status] }]} />
-                <Text style={styles.legendText}>{label}</Text>
-              </View>
-            ))}
-          </View>
+          {isEditMode ? (
+            <TouchableOpacity 
+              style={[styles.logoutBtn, { backgroundColor: COLORS.success + '20', borderColor: COLORS.success }]} 
+              onPress={() => { setIsEditMode(false); setMovingTableId(null); }}
+            >
+              <Text style={[styles.logoutBtnText, { color: COLORS.success }]}>✓ Düzenlemeyi Bitir</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.legend}>
+              {Object.entries(STATUS_LABELS).map(([status, label]) => (
+                <View key={status} style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: STATUS_COLORS[status] }]} />
+                  <Text style={styles.legendText}>{label}</Text>
+                </View>
+              ))}
+            </View>
+          )}
           <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
             <Text style={styles.logoutBtnText}>🚪 Çıkış</Text>
           </TouchableOpacity>
@@ -89,36 +156,73 @@ const TablesScreen = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
         ))}
-        {admin && (
+        {admin && !isEditMode && (
           <TouchableOpacity style={styles.addTableBtn} onPress={() => setShowAddModal(true)}>
             <Text style={styles.addTableBtnText}>+ Masa Ekle</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      {/* Masa Grid */}
-      <ScrollView contentContainerStyle={styles.tablesGrid}>
-        {sectionTables.map(table => (
-          <TouchableOpacity
-            key={table.id}
-            style={[styles.tableCard, { borderColor: STATUS_COLORS[table.status] }]}
-            onPress={() => handleTablePress(table)}
-            onLongPress={() => admin && handleRemoveTable(table.id, table.name)}
-            activeOpacity={0.8}
-          >
-            <View style={[styles.tableStatusBadge, { backgroundColor: STATUS_COLORS[table.status] }]}>
-              <Text style={styles.tableStatusText}>{STATUS_LABELS[table.status]}</Text>
-            </View>
-            <Text style={styles.tableName}>{table.name}</Text>
-            {table.totalAmount > 0 && (
-              <Text style={styles.tableAmount}>{table.totalAmount} ₺</Text>
-            )}
-            {table.orders.length > 0 && (
-              <Text style={styles.tableOrders}>{table.orders.length} sipariş</Text>
-            )}
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      {/* Masa Grid (Artık Mutlak Konumlu Kroki) */}
+      <View style={styles.floorPlanContainer}>
+        {sectionTables.map(table => {
+          const panResponder = PanResponder.create({
+            onStartShouldSetPanResponder: () => isEditMode,
+            onMoveShouldSetPanResponder: () => isEditMode,
+            onPanResponderGrant: () => setMovingTableId(table.id),
+            onPanResponderMove: (evt, gs) => {
+              // Görsel geri bildirim için geçici olarak yerel state veya store güncellenebilir
+              // Performans için sadece release'de kaydetmek daha sağlıklı
+            },
+            onPanResponderRelease: (evt, gs) => {
+              moveTable(table.id, table.position.x + gs.dx, table.position.y + gs.dy);
+              setMovingTableId(null);
+            },
+          });
+
+          return (
+            <TouchableOpacity
+              key={table.id}
+              {...(isEditMode ? panResponder.panHandlers : {})}
+              style={[
+                styles.tableCard, 
+                { 
+                  position: 'absolute',
+                  left: table.position.x,
+                  top: table.position.y,
+                  borderColor: movingTableId === table.id ? COLORS.primary : STATUS_COLORS[table.status],
+                  zIndex: movingTableId === table.id ? 999 : 1
+                },
+                movingTableId === table.id && { backgroundColor: COLORS.primary + '20', transform: [{ scale: 1.1 }] },
+                isEditMode && { borderStyle: 'dashed' }
+              ]}
+              onPress={() => handleTablePress(table)}
+              onLongPress={() => handleLongPress(table)}
+              activeOpacity={0.8}
+            >
+              {isEditMode ? (
+                <View style={[styles.tableStatusBadge, { backgroundColor: movingTableId === table.id ? COLORS.primary : COLORS.border }]}>
+                  <Text style={styles.tableStatusText}>{movingTableId === table.id ? 'TAŞINIYOR' : 'DÜZENLE'}</Text>
+                </View>
+              ) : (
+                <View style={[styles.tableStatusBadge, { backgroundColor: STATUS_COLORS[table.status] }]}>
+                  <Text style={styles.tableStatusText}>{STATUS_LABELS[table.status]}</Text>
+                </View>
+              )}
+              
+              <Text style={styles.tableName}>{table.name}</Text>
+              
+              {!isEditMode && table.totalAmount > 0 && (
+                <Text style={styles.tableAmount}>{table.totalAmount.toFixed(0)} ₺</Text>
+              )}
+              
+              {isEditMode && (
+                <Text style={{ fontSize: 24, marginTop: 10 }}>{movingTableId === table.id ? '📍' : '🖐️'}</Text>
+              )}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
 
       {/* Masa Ekleme Modalı (Sadece Admin) */}
       <Modal visible={showAddModal} transparent animationType="fade">
@@ -143,6 +247,46 @@ const TablesScreen = ({ navigation }) => {
                 <Text style={styles.modalConfirmText}>Ekle</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Masa Yönetim Modalı (Long Press Sonrası) */}
+      <Modal visible={showManageModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { width: 320 }]}>
+            <Text style={styles.modalTitle}>Masa Yönetimi</Text>
+            <Text style={[styles.modalSubtitle, { marginBottom: 24 }]}>
+              "{selectedTable?.name}" masası için bir işlem seçin:
+            </Text>
+            
+            <TouchableOpacity 
+              style={[styles.manageBtn, { backgroundColor: COLORS.primary }]} 
+              onPress={() => {
+                setIsEditMode(true);
+                setMovingTableId(selectedTable?.id);
+                setShowManageModal(false);
+              }}
+            >
+              <Text style={styles.manageBtnText}>🔄 Dizilimi Düzenle</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.manageBtn, { backgroundColor: COLORS.danger + '20', borderColor: COLORS.danger, borderWidth: 1, marginTop: 12 }]} 
+              onPress={() => {
+                setShowManageModal(false);
+                handleRemoveTable(selectedTable?.id, selectedTable?.name);
+              }}
+            >
+              <Text style={[styles.manageBtnText, { color: COLORS.danger }]}>🗑️ Masayı Sil</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.modalCancelBtn, { marginTop: 20, alignSelf: 'center' }]} 
+              onPress={() => setShowManageModal(false)}
+            >
+              <Text style={styles.modalCancelText}>Kapat</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -185,9 +329,12 @@ const styles = StyleSheet.create({
   tablesGrid: {
     flexDirection: 'row', flexWrap: 'wrap', padding: 24, gap: 16,
   },
+  floorPlanContainer: {
+    flex: 1, padding: 24, position: 'relative',
+  },
   tableCard: {
-    width: 160, height: 140, backgroundColor: COLORS.surface,
-    borderRadius: BORDER_RADIUS.lg, padding: 16, borderWidth: 2,
+    width: 140, height: 120, backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.lg, padding: 12, borderWidth: 2,
     justifyContent: 'center', alignItems: 'center', ...SHADOWS.card,
   },
   tableStatusBadge: {
@@ -220,6 +367,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   modalConfirmText: { color: '#fff', fontWeight: '700' },
+  manageBtn: { padding: 16, borderRadius: BORDER_RADIUS.md, alignItems: 'center' },
+  manageBtnText: { color: '#fff', fontWeight: '700', fontSize: FONT_SIZES.md },
 });
 
 export default TablesScreen;

@@ -43,15 +43,23 @@ function MainTabs() {
           backgroundColor: COLORS.surface,
           borderTopColor: COLORS.border,
           borderTopWidth: 1,
-          height: 65,
-          paddingBottom: 8,
-          paddingTop: 8,
+          height: 75, // Biraz daha yüksek yapalım çerçeveler sığsın
+          paddingBottom: 10,
+          paddingTop: 10,
+        },
+        tabBarItemStyle: {
+          marginHorizontal: 8,
+          marginVertical: 2,
+          borderRadius: 12,
+          borderWidth: 1.5,
+          borderColor: COLORS.border,
+          backgroundColor: 'rgba(255,255,255,0.03)',
         },
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.textMuted,
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '700' },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '800', marginBottom: 2 },
         tabBarIcon: ({ focused }) => (
-          <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>
+          <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.6, marginBottom: 2 }}>
             {tabIcons[route.name] || '📋'}
           </Text>
         ),

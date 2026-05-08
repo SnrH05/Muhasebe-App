@@ -28,8 +28,8 @@ export const COLORS = {
   textMuted: '#5f6577',
   
   // Kenarlıklar
-  border: '#252535',
-  borderLight: '#35354a',
+  border: '#3a3a4d',
+  borderLight: '#4a4a5e',
   
   // Kategori Renkleri
   categoryPink: '#ff7eb3',

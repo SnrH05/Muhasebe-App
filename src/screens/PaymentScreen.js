@@ -461,9 +461,9 @@ const styles = StyleSheet.create({
   quickBtnText: { fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.textPrimary },
   cardPayBtn: {
     backgroundColor: COLORS.primary, padding: 20, borderRadius: BORDER_RADIUS.lg,
-    alignItems: 'center', marginBottom: 24,
+    alignItems: 'center', marginBottom: 24, borderWidth: 2, borderColor: COLORS.primaryLight,
   },
-  cardPayBtnText: { fontSize: FONT_SIZES.xl, fontWeight: '700', color: '#fff' },
+  cardPayBtnText: { fontSize: FONT_SIZES.xl, fontWeight: '800', color: '#fff' },
   actionRow: { flexDirection: 'row', gap: 12, marginTop: 'auto' },
   resetBtn: {
     flex: 1, padding: 18, borderRadius: BORDER_RADIUS.lg, alignItems: 'center',
@@ -472,9 +472,9 @@ const styles = StyleSheet.create({
   resetBtnText: { fontSize: FONT_SIZES.lg, fontWeight: '600', color: COLORS.textSecondary },
   completeBtn: {
     flex: 2, padding: 18, borderRadius: BORDER_RADIUS.lg, alignItems: 'center',
-    backgroundColor: COLORS.success,
+    backgroundColor: COLORS.success, borderWidth: 2, borderColor: COLORS.successLight,
   },
-  completeBtnText: { fontSize: FONT_SIZES.lg, fontWeight: '800', color: '#fff' },
+  completeBtnText: { fontSize: FONT_SIZES.lg, fontWeight: '900', color: '#fff' },
   successText: { fontSize: 36, fontWeight: '800', color: COLORS.success },
   successSub: { fontSize: FONT_SIZES.lg, color: COLORS.textSecondary, marginTop: 8 },
   posOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center' },
