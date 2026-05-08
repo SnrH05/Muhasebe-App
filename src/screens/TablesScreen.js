@@ -144,7 +144,12 @@ const TablesScreen = ({ navigation }) => {
       </View>
 
       {/* Bölüm Sekmeleri */}
-      <View style={styles.sectionTabs}>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false} 
+        style={styles.sectionTabs}
+        contentContainerStyle={styles.sectionTabsContent}
+      >
         {sections.map(section => (
           <TouchableOpacity
             key={section.id}
@@ -161,7 +166,7 @@ const TablesScreen = ({ navigation }) => {
             <Text style={styles.addTableBtnText}>+ Masa Ekle</Text>
           </TouchableOpacity>
         )}
-      </View>
+      </ScrollView>
 
       {/* Masa Grid (Artık Mutlak Konumlu Kroki) */}
       <View style={styles.floorPlanContainer}>
@@ -310,8 +315,11 @@ const styles = StyleSheet.create({
   legendDot: { width: 12, height: 12, borderRadius: 6 },
   legendText: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary },
   sectionTabs: {
-    flexDirection: 'row', paddingHorizontal: 24, paddingVertical: 12, gap: 10,
     backgroundColor: COLORS.surface, borderBottomWidth: 1, borderBottomColor: COLORS.border,
+    flexGrow: 0,
+  },
+  sectionTabsContent: {
+    flexDirection: 'row', paddingHorizontal: 24, paddingVertical: 12, gap: 10, alignItems: 'center',
   },
   sectionTab: {
     paddingHorizontal: 20, paddingVertical: 10, borderRadius: BORDER_RADIUS.lg,

@@ -397,7 +397,12 @@ const AdminScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.tabBar}>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false} 
+        style={styles.tabBar}
+        contentContainerStyle={styles.tabBarContent}
+      >
         {tabs.map(tab => (
           <TouchableOpacity
             key={tab.key}
@@ -408,12 +413,12 @@ const AdminScreen = () => {
           </TouchableOpacity>
         ))}
         <TouchableOpacity 
-          style={[styles.tab, { backgroundColor: COLORS.danger + '15', marginLeft: 'auto' }]} 
+          style={[styles.tab, { backgroundColor: COLORS.danger + '15' }]} 
           onPress={logout}
         >
           <Text style={[styles.tabText, { color: COLORS.danger }]}>🚪 Çıkış Yap</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
 
       <ScrollView style={styles.content}>
         {/* MENÜ & FİYAT */}
@@ -1096,7 +1101,8 @@ const AdminScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  tabBar: { flexDirection: 'row', backgroundColor: COLORS.surface, paddingHorizontal: 24, paddingVertical: 12, gap: 10, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+  tabBar: { backgroundColor: COLORS.surface, borderBottomWidth: 1, borderBottomColor: COLORS.border, width: '100%', flexGrow: 0 },
+  tabBarContent: { paddingHorizontal: 24, paddingVertical: 12, gap: 10, flexDirection: 'row', alignItems: 'center' },
   tab: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: BORDER_RADIUS.lg, backgroundColor: COLORS.surfaceLight, borderWidth: 1.5, borderColor: COLORS.border },
   tabActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primaryLight },
   tabText: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, fontWeight: '700' },
